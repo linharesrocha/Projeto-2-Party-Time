@@ -4,6 +4,7 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 
 // routes
+const authRouter = require("./routes/authRoutes.js");
 
 // middlewares
 
@@ -17,6 +18,7 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static("public"));
 // atrelar rotas no express
+app.use("/api/auth", authRouter);
 
 // conexão mongodb
 mongoose.connect(
