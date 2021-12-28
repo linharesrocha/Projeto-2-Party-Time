@@ -10,20 +10,20 @@ router.post("/register", async (req, res) => {
     const { name, email, password, confirmpassword } = req.body;
 
     // check for required fields
-    if(name == null || email == null || password == null || confirmpassword == null) {
-        return res.status(400).json({error: "Por favor, preencha todos os campos"});
+    if (name == null || email == null || password == null || confirmpassword == null) {
+        return res.status(400).json({ error: "Por favor, preencha todos os campos" });
     }
 
     // check if passwords match
-    if(password != confirmpassword) {
-        return res.status(400).json({error: "As senhas não conferem!"});
+    if (password != confirmpassword) {
+        return res.status(400).json({ error: "As senhas não conferem!" });
     }
 
     // check if user exists
     const emailExists = await User.findOne({ email: email });
 
-    if(emailExists) {
-        return res.status(400).json({ error: "O e-mail informado já está em uso!"});
+    if (emailExists) {
+        return res.status(400).json({ error: "O e-mail informado já está em uso!" });
     }
 
     // create password
@@ -36,7 +36,7 @@ router.post("/register", async (req, res) => {
         password: passwordHash
     });
 
-    try{
+    try {
         const newUser = await user.save();
 
         // create token
@@ -53,10 +53,45 @@ router.post("/register", async (req, res) => {
         // return token
         res.json({ error: null, msg: "Você realizou o cadastro com sucesso", token: token, userId: newUser._id });
 
-    }catch(error){
+    } catch (error) {
         res.status(400).json({ error });
     }
 
 });
+
+
+router.post("/login", async (req, res) => {
+
+    const { email, password } = req.body;
+
+    // check if user exists
+    const user = await User.findOne({ email: email });
+
+    if (!user) {
+        return res.status(400).json({ error: "Não há um usuário cadastrado com este e-mail!" });
+    }
+
+    // check if password match
+    const checkPassword = await bcrypt.compare(password, user.password);
+
+    if (!checkPassword) {
+        return res.status(400).json({ error: "Senha inválida!" });
+    }
+
+    // create token
+    const token = jwt.sign(
+        // payload
+        {
+            name: user.name,
+            id: user._id
+        },
+        // secret
+        "linux"
+    );
+
+    // return token
+    res.json({ error: null, msg: "Você está autenticado!", token: token, userId: user._id });
+
+})
 
 module.exports = router;
