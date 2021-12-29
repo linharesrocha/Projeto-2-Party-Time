@@ -77,5 +77,15 @@ router.post("/", verifyToken, upload.fields([{ name: "photos"}]), async (req, re
 });
 
 // get all public parties
+router.get("/all", async (req, res) => {
+    try {
+        
+        const parties = await Party.find({ privacy: false }).sort([[ '_id', -1 ]]);
+        res.json({ error: null, parties: parties });
+
+    }catch(err) {
+        return res.status(400).json({ error })
+    }
+})
 
 module.exports = router;
