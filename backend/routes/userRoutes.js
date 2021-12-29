@@ -37,7 +37,7 @@ router.put("/", verifyToken, async (req, res) => {
 
     // check if user id is equal token user id
     if(userId != userReqId) {
-        res.status(401).json({error: "Acesso negado!"});
+        return res.status(401).json({error: "Acesso negado!"});
     }
 
     // create an user object
@@ -45,6 +45,30 @@ router.put("/", verifyToken, async (req, res) => {
         name: req.body.name,
         email: req.body.email
     };
+
+    // check if passwords match
+    if(password !== confirmpassword) {
+        return res.status(401).json({ error: "As senhas não conferem! "});
+        // change password
+    } else if(password == confirmpassword && password != null) {
+        // creating password
+
+        const salt = await bcrypt.genSalt(12);
+        const passwordHash = await bcrypt.hash(password, salt);
+
+        // add password to data
+        updateData.password = passwordHash;
+    }
+
+    try {
+        
+        // returns updated data
+        const updatedUser = await User.findOneAndUpdate({ _id: userId}, {$set: updateData}, {new: true});
+        res.json({ error: null, msg: "Usuário atualizado com sucesso!", data: updatedUser})
+
+    }catch(err) {   
+        res.status(400).json({err})
+    }
 });
 
 module.exports = router;
