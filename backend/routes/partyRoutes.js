@@ -125,4 +125,38 @@ router.get("/userparty/:id", verifyToken, async (req, res) => {
     }
 });
 
+// get party (public or private)
+router.get("/:id", async (req, res) => {
+
+    try {
+        // find party
+        const id = req.params.id;
+
+        const party = await Party.findOne({ _id: id });
+
+        // public party
+        if(party.privacy === false) {
+            res.json({ error: null, party: party});
+        }
+        // private party
+        else {
+
+            const token = req.header("auth-token");
+
+            const user = await getUserByToken(token);
+
+            const userId = user._id.toString();
+            const partyUserId = party.userId.toString();
+
+            // check if user id is equal to party user id
+            if(userId == partyUserId) {
+                res.json({ error: null, party: party});
+            }
+        }
+    }
+    catch(err){
+        return res.status(400).json({ msg: "Este evento não existe" });
+    }
+})
+
 module.exports = router;
