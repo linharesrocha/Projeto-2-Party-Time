@@ -157,6 +157,25 @@ router.get("/:id", async (req, res) => {
     catch(err){
         return res.status(400).json({ msg: "Este evento não existe" });
     }
-})
+});
+
+// delete a party
+router.delete("/", verifyToken, async (req, res) => {
+
+    const token = req.header("auth-token");
+    const user = await getUserByToken(token);
+    const partyId = req.body.id;
+    const userId = user._id.toString();
+
+    try {
+
+        await Party.deleteOne({ _id: partyId, userId: userId });
+        res.json({error: null, msg: "Evento removido com sucesso!"});
+
+    }catch(err) {
+        res.status(400).json({err: "Acesso negado!"})
+    }
+
+});
 
 module.exports = router;
