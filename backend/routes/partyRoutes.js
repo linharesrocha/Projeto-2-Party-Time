@@ -86,6 +86,24 @@ router.get("/all", async (req, res) => {
     }catch(err) {
         return res.status(400).json({ error })
     }
-})
+});
+
+// get all user parties
+router.get("/userparties", verifyToken, async (req, res) => {
+    try {
+
+        const token = req.header("auth-token");
+
+        const user = await getUserByToken(token);
+
+        const userId = user._id.toString();
+
+        const parties = await Party.find({ userId: userId });
+        res.json({ error: null, parties: parties });
+
+    }catch(err) {
+        return res.status(400).json({ err })
+    }
+});
 
 module.exports = router;
