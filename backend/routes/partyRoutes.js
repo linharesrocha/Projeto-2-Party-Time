@@ -178,4 +178,69 @@ router.delete("/", verifyToken, async (req, res) => {
 
 });
 
+// update a party
+router.put("/", verifyToken, upload.fields([{ name: "photos"}]), async (req, res) => {
+
+    // req body
+    const title = req.body.title
+    const description = req.body.description
+    const partyDate = req.body.partyDate;
+    const partyId = req.body.id;
+    const partyUserId = req.body.user_id;
+
+    let files = [];
+
+    if(req.files) {
+        files = req.files.photos;
+    }
+
+    // validations
+    if(title == "null" || description == "null" || partyDate == "null") {
+        return res.status(400).json({ error: "Preencha pelo menos nome, descrição e data."})
+    }
+
+    // verify user
+    const token = req.header("auth-token");
+    const userByToken = await getUserByToken(token);
+    const userId = userByToken._id.toString();
+
+    if(userId != partyUserId) {
+        return res.status(400).json({ error: "Acesso negado!" })
+    }
+
+    // build party object
+    const party = {
+        id: partyId,
+        title: title,
+        description: description,
+        partyDate: partyDate,
+        privacy: req.body.privacy,
+        userId: userId
+    }
+
+    // create photos array with image path
+    let photos = [];
+
+    if(files && files.length > 0) {
+        files.forEach((photo, i) => {
+            photo[i] = photo.path;
+        })
+
+        party.photos = photos;
+    }
+
+    try {
+        
+        // returns updated data
+        const updatedParty = await Party.findOneAndUpdate({_id: partyId, userId: userId }, {$set: party }, {new: true})
+        res.json({error: null, msg: "Evento atualizado com sucesso!", data: updatedParty});
+
+    }catch(err) {
+        res.status(400).json({error});
+    }
+
+
+
+});
+
 module.exports = router;
